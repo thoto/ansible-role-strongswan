@@ -1,0 +1,56 @@
+{% set conn = ipsec_conn_defaults|combine(item) %}
+{% set my_ca=my_ipsec_cas|selectattr('name','==',conn.ca)|list|first %}
+{% macro gen_id(prefix,hostname) -%}
+{{prefix ~ ", CN=" ~ hostname}}
+{%- endmacro %}
+{% macro connparams(left,right) %}
+conn {{conn.name}}
+	authby={{conn.authby}}
+	auto={{conn.auto}}
+	esp={{conn.crypto.esp }}
+	ike={{conn.crypto.ike }}
+	keyexchange=ikev2
+	mobike={{conn.mobike|ternary('yes','no')}}
+	compress={{conn.compress|ternary('yes','no')}}
+	fragmentation={{conn.fragmentation|ternary('yes','no')}}
+{% if conn.life is iterable %}
+#	{{conn.life.comment}}
+	lifebytes={{conn.life.bytes}}
+	lifepackets={{conn.life.packets}}
+	lifetime={{conn.life.time}}
+{% endif %}
+{% if conn.margin is iterable %}
+#	{{conn.margin.comment}}
+	marginbytes={{conn.margin.bytes}}
+	marginpackets={{conn.margin.packets}}
+	margintime={{conn.margin.time}}
+{% endif %}
+	type={{conn.type}}
+	left={{left.name}}
+{% if 'cert' in left %}
+	leftcert={{left.cert}}
+{% endif %}
+	leftid="{{left.id}}"
+	right={{right.name}}
+{% if 'cert' in right %}
+	rightcert={{right.cert}}
+{% endif %}
+	rightid="{{right.id}}"
+
+{% endmacro %}
+
+
+{% if inventory_hostname is inoreq  conn.left %}
+{%   for r in (conn.right is string)|ternary([conn.right],conn.right) %}
+{{     connparams({'name': inventory_hostname,
+         'cert': my_ca.name ~ "-cert.der",
+         'id': gen_id(my_ca.id_prefix, inventory_hostname)},
+         {'name':r, 'id': gen_id(my_ca.id_prefix,r) }) }}
+{%   endfor %}
+{% else %}
+{%   for l in (conn.left is string)|ternary([conn.left],conn.left) %}
+{{     connparams({'name': l, 'id': gen_id(my_ca.id_prefix,l)},
+         {'name': inventory_hostname, 'cert': my_ca.name~"-cert.der",
+         'id': gen_id(my_ca.id_prefix,inventory_hostname)}) }}
+{%   endfor %}
+{% endif %}

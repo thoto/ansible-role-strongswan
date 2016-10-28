@@ -1,0 +1,24 @@
+ipsec_conn_defaults:
+  crypto:
+    esp: aes256gcm16-sha512
+    ike: aes256gcm16-sha512-sha384-ecp521
+  id_prefix: "O=myorg, OU=ipsec"
+  mobike: no
+  auto: add
+  authby: pubkey
+  type: transport
+  compress: no
+  fragmentation: yes
+  life:
+    bytes: 268435456
+    packets: 262144
+    time: 5h
+    comment: "256MB / 256k packets / 5h"
+  margin:
+    bytes: 67108864
+    packets: 1024
+    time: 1h
+    comment: "64MB / 1024 packets / 1h"
+  key_size: 512
+  # ca: to be generated
+

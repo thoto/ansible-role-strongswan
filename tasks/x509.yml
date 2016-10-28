@@ -1,0 +1,66 @@
+# ***
+# X.509 stuff
+# ***
+- name: upload IPsec CA certificates
+  copy: src={{item.file}} dest=/etc/ipsec.d/cacerts/{{item.file}}
+  notify: reload strongswan
+
+# key generation and configuration
+- name: generate IPsec X.509 key
+  shell: "ipsec pki -g -s {{item.key_size|
+            default(ipsec_conn_defaults.key_size)}} >
+          /etc/ipsec.d/private/{{item.name}}-key.der"
+  args:
+    creates: "/etc/ipsec.d/private/{{item.name}}-key.der"
+  notify: restart strongswan
+
+- name: set permissions on IPsec X.509 key file
+  file:
+    path: /etc/ipsec.d/private/{{item.name}}-key.der
+    owner: root
+    group: root
+    mode: 0640
+
+- name: add X.509 key to IPsec secrets
+  lineinfile:
+    dest: /etc/ipsec.secrets
+    state: present
+    line: ": RSA {{item.name}}-key.der"
+  notify: restart strongswan
+
+# ***
+# X.509 signing
+# ***
+- name: stat X.509 certificate file
+  stat: path="/etc/ipsec.d/certs/{{item.name}}-cert.der"
+  register: my_cert
+
+- block:
+  - name: generate IPsec X.509 CSR
+    shell: ipsec pki -r --dn "{{item.id_prefix~', CN='~inventory_hostname}}"
+            --digest sha256
+            < /etc/ipsec.d/private/{{item.name}}-key.der
+            > /etc/ipsec.d/reqs/{{item.name}}-req.der
+    args:
+      creates: "/etc/ipsec.d/reqs/{{item.name}}-req.der"
+
+  - name: fetch X.509 CSR
+    slurp: src="/etc/ipsec.d/reqs/{{item.name}}-req.der"
+    register: my_base64_csr
+
+  - name: sign X.509 certificate by CA
+    shell: "echo -n '{{my_base64_csr.content}}' | base64 -d | sudo
+      {{ item.sign_user|default(false)|ternary('-u '~item.sign_user,'')}}
+      {{item.sign_command}} {{item.sign_command_args|default('')}}
+      '{{ item.id_prefix~', CN='~inventory_hostname  }}' | base64"
+    delegate_to: "{{item.ca_host}}"
+    register: my_sign_result
+
+  - name: write signed X.509 certificate to host
+    shell: echo "{{ my_sign_result.stdout }}" | base64 -d
+      > "/etc/ipsec.d/certs/{{item.name}}-cert.der"
+    args:
+      creates: "/etc/ipsec.d/certs/{{item.name}}-cert.der"
+    notify: reload strongswan
+
+  when: my_cert.stat.exists != true

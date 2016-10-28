@@ -1,0 +1,50 @@
+# ***
+# gather information
+# ***
+- name: find left connections
+  set_fact:
+    my_ipsec_conns: "{{ipsec_conns |
+      selectattr('left','inoreq','webdav1.thoto.net') | list}}"
+
+- name: find right connections
+  set_fact:
+    my_ipsec_conns: "{{ my_ipsec_conns|default([]) + ipsec_conns |
+      selectattr('right','inoreq','webdav1.thoto.net') | list}}"
+
+# if this one failes it is probably caused by a ca not defined
+- name: find all CAs
+  set_fact:
+    my_ipsec_cas: "{{ (my_ipsec_cas|default([])) + (ipsec_cas | selectattr('name','==',item)|list) }}"
+  with_items: "{{my_ipsec_conns|map(attribute='ca')|list}}"
+  failed_when: (ipsec_cas | selectattr('name','==',item)|list|length) == 0
+
+# ***
+# install packages and configuration
+# ***
+- name: install packages
+  apt: name="strongswan-ikev2" state=present
+
+- name: create directory
+  file: path=/etc/ipsec.conf.d state=directory owner=root group=root
+
+- name: upload ipsec.conf
+  template: src=ipsec.conf.j2 dest=/etc/ipsec.conf
+  notify: reload strongswan
+
+# ***
+# add configuration
+# ***
+- name: add IPsec CA configuration
+  template: src=ipsec.ca.conf.j2 dest=/etc/ipsec.conf.d/{{item.name}}.ca.conf
+  with_items: "{{my_ipsec_cas}}"
+  notify: reload strongswan
+
+- name: add IPsec connection configuration
+  template:
+    src: ipsec.conn.conf.j2
+    dest: /etc/ipsec.conf.d/{{item.name}}.conn.conf
+  with_items: "{{my_ipsec_conns}}"
+  notify: reload strongswan
+
+- include: x509.yml
+  with_items: "{{my_ipsec_cas}}"

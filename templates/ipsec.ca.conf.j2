@@ -1,0 +1,24 @@
+ca {{item.name}}
+	auto={{item.auto|default('add')}}
+	cacert={{item.file}}
+{% if 'crl' in item and item.crl is string %}
+	crluri={{ item.crl }}
+{% elif 'crl' in item %}
+{%   if item.crl[0] is string %}
+	crluri1={{ item.crl[0] }}
+{%   endif %}
+{%   if item.crl[1] is string %}
+	crluri2={{ item.crl[1] }}
+{%   endif %}
+{% endif %}
+{% if 'oscp' in item and item.oscp is string %}
+	oscpuri={{ item.oscp }}
+{% elif 'oscp' in item %}
+{%   if item.oscp[0] is string %}
+	oscpuri1={{ item.oscp[0] }}
+{%   endif %}
+{%   if item.oscp[1] is string %}
+	oscpuri2={{ item.oscp[1] }}
+{%   endif %}
+{% endif %}
+
