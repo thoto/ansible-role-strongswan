@@ -50,8 +50,8 @@
 
   - name: sign X.509 certificate by CA
     shell: "echo -n '{{my_base64_csr.content}}' | base64 -d | sudo
-      {{ item.sign_user|default(false)|ternary('-u '~item.sign_user,'')}}
-      {{item.sign_command}} {{item.sign_command_args|default('')}}
+      {{ item.ca_host_user|default(false)|ternary('-u '~item.ca_host_user,'')}}
+      {{item.ca_sign_command}} {{item.ca_sign_command_args|default('')}}
       '{{ item.id_prefix~', CN='~inventory_hostname  }}' | base64"
     delegate_to: "{{item.ca_host}}"
     register: my_sign_result
