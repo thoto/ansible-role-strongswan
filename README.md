@@ -6,13 +6,13 @@ ansible role to setup strongswan IPsec including public key authentication
 This role fetches its configuration from two variables providing a list of
 X.509 certificate authorities inside the `ipsec_cas` variable and connections
 using those CAs inside `ipsec_conns` variable. Thereby you can configure
-connections and enforcing security parameters at a central point without
+connections and enforce security parameters at a central point without
 caring about missing configuration of connections at per host level and
-enabiling easy 1:n or n:n connections.
+enable easy 1:n or n:n connections.
 
-Also defaults for all connections may be changed altering the
+Also defaults for all connections may be changed by altering the
 `ipsec_conn_default` variable. Therefore you are able to adjust crypto
-defaults without altering every single host and keeping configuration
+defaults without altering every single host and keep configuration
 as short as possible.
 
 ### CAs
