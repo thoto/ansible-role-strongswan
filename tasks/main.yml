@@ -4,12 +4,12 @@
 - name: find left connections
   set_fact:
     my_ipsec_conns: "{{ipsec_conns |
-      selectattr('left','inoreq','webdav1.thoto.net') | list}}"
+      selectattr('left','inoreq',inventory_hostname) | list}}"
 
 - name: find right connections
   set_fact:
     my_ipsec_conns: "{{ my_ipsec_conns|default([]) + ipsec_conns |
-      selectattr('right','inoreq','webdav1.thoto.net') | list}}"
+      selectattr('right','inoreq',inventory_hostname) | list}}"
 
 # if this one failes it is probably caused by a ca not defined
 - name: find all CAs

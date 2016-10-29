@@ -19,6 +19,5 @@ ipsec_conn_defaults:
     packets: 1024
     time: 1h
     comment: "64MB / 1024 packets / 1h"
-  key_size: 512
-  # ca: to be generated
 
+ipsec_default_key_size: 8192
