@@ -1,10 +1,10 @@
 # ansible-role-strongswan
-ansible role to setup strongswan ipsec including public key authentication
+ansible role to setup strongswan IPsec including public key authentication
 
-# Variables
+## Variables
 
-This role stores its configuration inside two single variables providing
-a list of X.509 certificate authorities inside the `ipsec_cas` and connections
+This role fetches its configuration from two variables providing a list of
+X.509 certificate authorities inside the `ipsec_cas` variable and connections
 using those CAs inside `ipsec_conns` variable. Thereby you can configure
 connections and enforcing security parameters at a central point without
 caring about missing configuration of connections at per host level and
@@ -15,11 +15,11 @@ Also defaults for all connections may be changed altering the
 defaults without altering every single host and keeping configuration
 as short as possible.
 
-## CAs
+### CAs
 
-### Properties of a CA
+#### Properties of a CA
 
-TL;DR: look at the examples below.
+_TL;DR_: see [examples section](#examples)!
 
 * `name`: any name identifying the CA in a connection definition
 * `file`: CA certificate to upload to IPsec server
@@ -41,7 +41,7 @@ TL;DR: look at the examples below.
   The according DN is passed as the last parameter of the command.
 * `ca_sign_command_args`: additional arguments to pass to `ca_sign_command`
 
-### Notes on CA key signing
+#### Notes on CA key signing
 
 The following shell script provides a simple way to perform ca signing tasks:
 
@@ -53,7 +53,7 @@ ipsec pki --issue --type pkcs10 --cakey ${CAKEY} --cacert ${CACERT} \
 	--digest sha256 --dn "$1"
 ```
 
-That is a quite simple implementation of a CA, maybe insecure because there
+This is a quite simple implementation of a CA, maybe insecure because there
 is no validation and correction. Multiple CAs may be handled by a similar
 script using the `ca_sign_command_args`.
 
@@ -65,7 +65,25 @@ Cmnd_Alias CASIGN = /usr/local/sbin/casign-dtis
 johndoe ALL = NOPASSWD: CASIGN
 ```
 
-### Example
+### Connections
+_TL;DR_: see [examples section](#Examples)!
+
+* `name`: identifier of the connection
+* `left`/`right`: FQDN as string or list of FQDNs specifying the hosts to be
+  connected. Every host on one side gets connected to all of the others side
+  but not to the ones on the same side.
+* `crypto`: dict of crypto parameters to use.
+* `ca`: name of the CA to be used
+
+Multiple other options can be found at
+[`defaults/main.yml`](./defaults/main.yml) which should be self-explanatory
+and adjust various parameters of the connection to be generated.
+(e.g. connection margin and life parameters, compression, etc.)
+See [strongswan documentation](https://wiki.strongswan.org/projects/strongswan/wiki/ConnSection) for more information.
+
+## Examples
+
+### CA
 ```yaml
 - ipsec_cas:
   - name: fooca
@@ -76,23 +94,7 @@ johndoe ALL = NOPASSWD: CASIGN
     ca_sign_command: /usr/local/sbin/casign-fooca
 ```
 
-## Connections
-
-### Properties of a connection
-
-* `name`: identifier of the connection
-* `left`/`right`: FQDN as string or list of FQDNs specifying the hosts to be
-  connected. Every host on one side gets connected to all of the others side
-  but not to the ones on the same side.
-* `crypto`: dict of crypto parameters to use.
-* `ca`: name of the CA to be used
-
-Multiple other options can be found in `defaults/main.yml` which should be
-self-explanatory and adjust various parameters of the connection to be
-generated. (e.g. connection margin and life parameters, compression, etc.)
-See also: [strongswan documentation].
-
-### Example
+### connection
 ```yaml
 - ipsec_conns:
   - name: foo-connection
