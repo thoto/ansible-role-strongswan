@@ -81,6 +81,10 @@ and adjust various parameters of the connection to be generated.
 (e.g. connection margin and life parameters, compression, etc.)
 See [strongswan documentation](https://wiki.strongswan.org/projects/strongswan/wiki/ConnSection) for more information.
 
+### other options
+* `ipsec_default_key_size`: default size of key if none is given in `ipsec_cas`
+
+
 ## Examples
 
 ### CA

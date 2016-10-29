@@ -8,7 +8,7 @@
 # key generation and configuration
 - name: generate IPsec X.509 key
   shell: "ipsec pki -g -s {{item.key_size|
-            default(ipsec_conn_defaults.key_size)}} >
+            default(ipsec_default_key_size)}} >
           /etc/ipsec.d/private/{{item.name}}-key.der"
   args:
     creates: "/etc/ipsec.d/private/{{item.name}}-key.der"
