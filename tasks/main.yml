@@ -1,6 +1,15 @@
 # ***
 # gather information
 # ***
+- include_vars: "{{ item }}"
+  with_first_found:
+    - "../vars/{{ansible_distribution}}-{{
+       ansible_distribution_major_version | int }}.yml"
+    - "../vars/{{ansible_distribution}}.yml"
+    - "../vars/{{ansible_os_family}}.yml"
+    - "../vars/default.yml"
+  when: strongswan_packages is not defined
+
 - name: find left connections
   set_fact:
     my_ipsec_conns: "{{ipsec_conns |
@@ -23,6 +32,7 @@
 # ***
 - name: install packages
   apt: name="strongswan-ikev2" state=present
+  with_items: "{{strongswan_packages}}"
 
 - name: create directory
   file: path=/etc/ipsec.conf.d state=directory owner=root group=root

@@ -1,6 +1,10 @@
 # ansible-role-strongswan
 ansible role to setup strongswan IPsec including public key authentication
 
+## Requirements
+
+Tested with Debian Jessie. Should work with any Debian like distribution.
+
 ## Variables
 
 This role fetches its configuration from two variables providing a list of
@@ -23,7 +27,7 @@ _TL;DR_: see [examples section](#examples)!
 
 * `name`: any name identifying the CA in a connection definition
 * `file`: CA certificate to upload to IPsec server
-* `id_prefix`: ID DN prefix. E.g. if your DN on your certificate should be 
+* `id_prefix`: ID DN prefix. E.g. if your DN on your certificate should be
   `O=example.net, OU=ipsec, CN=foo.example.net` on host `foo.example.net`
   your `id_prefix` variable should go `O=example.net, OU=ipsec`. Providing
   it inside the CA definition lowers signing complexity and the number of
