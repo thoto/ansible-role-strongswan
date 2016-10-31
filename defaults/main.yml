@@ -1,3 +1,4 @@
+---
 ipsec_conn_defaults:
   crypto:
     esp: aes256gcm16-sha512

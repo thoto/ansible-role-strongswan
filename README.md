@@ -1,6 +1,10 @@
 # ansible-role-strongswan
 ansible role to setup strongswan IPsec including public key authentication
 
+## Requirements
+
+Tested with Debian Jessie. Should work with any Debian like distribution.
+
 ## Variables
 
 This role fetches its configuration from two variables providing a list of
