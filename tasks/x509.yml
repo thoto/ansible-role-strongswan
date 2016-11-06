@@ -31,6 +31,22 @@
 # ***
 # X.509 signing
 # ***
+- name: check if X.509 certificate is valid
+  shell: "ipsec pki --verify --cacert /etc/ipsec.d/cacerts/{{item.file}}
+    < /etc/ipsec.d/certs/{{item.name}}-cert.der"
+  register: my_cert_validity_ipsec
+  failed_when: my_cert_validity_ipsec.rc>2
+  changed_when: my_cert_validity_ipsec.rc==1
+
+- name: check if X.509 certificat expires in 30 days
+  shell: "openssl x509 -checkend 2592000 -noout -inform der
+    < /etc/ipsec.d/certs/{{item.name}}-cert.der"
+  register: my_cert_validity_openssl
+  failed_when: my_cert_validity_openssl.rc>2
+# ignore errors since openssl may not be present on target system.
+  ignore_errors: true
+  changed_when: my_cert_validity_openssl.rc==1
+
 - name: stat X.509 certificate file
   stat: path="/etc/ipsec.d/certs/{{item.name}}-cert.der"
   register: my_cert
@@ -63,4 +79,5 @@
       creates: "/etc/ipsec.d/certs/{{item.name}}-cert.der"
     notify: reload strongswan
 
-  when: my_cert.stat.exists != true
+  when: (my_cert.stat.exists != true) or (my_cert_validity_openssl.changed)
+    or (my_cert_validity_ipsec.changed)
