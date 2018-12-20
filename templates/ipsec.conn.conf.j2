@@ -3,7 +3,7 @@
 {% macro gen_id(prefix,hostname) -%}
 {{prefix ~ ", CN=" ~ hostname}}
 {%- endmacro %}
-{% macro connparams(left,right) %}
+{% macro connparams(left,right,tunnel) %}
 conn {{conn.name}}
 	authby={{conn.authby}}
 	auto={{conn.auto}}
@@ -36,21 +36,54 @@ conn {{conn.name}}
 	rightcert={{right.cert}}
 {% endif %}
 	rightid="{{right.id}}"
+{% if tunnel %}
+{%   if 'left' in tunnel %}
+{%     if 'subnet' in tunnel.left %}
+	leftsubnet={{tunnel.left.subnet|join(',')}}
+{%     endif %}{% if 'sourceip' in tunnel.left %}
+	leftsourceip={{tunnel.left.sourceip}}
+{%     endif %}
+{%   endif %}
+{%   if 'right' in tunnel %}
+{%     if 'subnet' in tunnel.right %}
+	rightsubnet={{tunnel.right.subnet|join(',')}}
+{%     endif %}{% if 'sourceip' in tunnel.right %}
+	rightsourceip={{tunnel.right.sourceip}}
+{%     endif %}
+{%   endif %}
+{% endif %}
 
+{% endmacro %}
+{% macro connparams_swap(left,right,swap,tnl) %}
+{% if swap %}
+{{   connparams(right,left,{'right':tnl.left,'left':tnl.right}) }}
+{% else %}
+{{   connparams(left,right,{'right':tnl.right,'left':tnl.left}) }}
+{% endif %}
 {% endmacro %}
 
 
 {% if inventory_hostname is inoreq  conn.left %}
+{%   if 'tunnel' in conn and 'left' in conn.tunnel %}
+{%     set tnl = conn.tunnel.left %}
+{%   else %}
+{%     set tnl = {} %}
+{%   endif %}
 {%   for r in (conn.right is string)|ternary([conn.right],conn.right) %}
 {{     connparams({'name': inventory_hostname,
          'cert': my_ca.name ~ "-cert.der",
          'id': gen_id(my_ca.id_prefix, inventory_hostname)},
-         {'name':r, 'id': gen_id(my_ca.id_prefix,r) }) }}
+         {'name':r, 'id': gen_id(my_ca.id_prefix,r) },tnl) }}
 {%   endfor %}
 {% else %}
+{%   if 'tunnel' in conn and 'right' in conn.tunnel %}
+{%     set tnl = conn.tunnel.right %}
+{%   else %}
+{%     set tnl = {} %}
+{%   endif %}
 {%   for l in (conn.left is string)|ternary([conn.left],conn.left) %}
-{{     connparams({'name': l, 'id': gen_id(my_ca.id_prefix,l)},
+{{     connparams_swap({'name': l, 'id': gen_id(my_ca.id_prefix,l)},
          {'name': inventory_hostname, 'cert': my_ca.name~"-cert.der",
-         'id': gen_id(my_ca.id_prefix,inventory_hostname)}) }}
+         'id': gen_id(my_ca.id_prefix,inventory_hostname)}, True, tnl) }}
 {%   endfor %}
 {% endif %}

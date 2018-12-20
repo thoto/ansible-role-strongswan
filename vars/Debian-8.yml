@@ -2,4 +2,4 @@
 # vars file for strongswan
 strongswan_packages:
   - strongswan-ikev2
-  - strongswan-pki
+strongswan_servicename: ipsec
