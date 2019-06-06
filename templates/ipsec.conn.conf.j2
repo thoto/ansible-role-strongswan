@@ -26,12 +26,12 @@ conn {{conn.name}}
 	margintime={{conn.margin.time}}
 {% endif %}
 	type={{conn.type}}
-	left={{left.name}}
+	left={{((conn.any|default("none"))=="left") | ternary("%any",left.name) }}
 {% if 'cert' in left %}
 	leftcert={{left.cert}}
 {% endif %}
 	leftid="{{left.id}}"
-	right={{right.name}}
+	right={{((conn.any|default("none"))=="right")| ternary("%any",right.name) }}
 {% if 'cert' in right %}
 	rightcert={{right.cert}}
 {% endif %}
