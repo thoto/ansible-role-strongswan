@@ -63,7 +63,7 @@ conn {{conn.name}}
 {% endmacro %}
 
 
-{% if inventory_hostname is inoreq  conn.left %}
+{% if inventory_hostname is inoreq (conn.left) %}
 {%   if 'tunnel' in conn and 'left' in conn.tunnel %}
 {%     set tnl = conn.tunnel.left %}
 {%   else %}

@@ -1,0 +1,6 @@
+---
+# vars file for strongswan
+strongswan_packages:
+  - strongswan-charon
+  - strongswan-pki
+strongswan_servicename: ipsec
